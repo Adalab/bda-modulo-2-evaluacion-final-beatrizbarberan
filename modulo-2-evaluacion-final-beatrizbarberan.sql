@@ -189,6 +189,24 @@ consulta debe mostrar el nombre y apellido de los actores y el número de pelíc
 han actuado juntos. Pista: Podemos hacer un JOIN de una tabla consigo misma, poniendole un 
 alias diferente */
 
+-- Bueno con nombres con consulta a ChatGPT
+SELECT 
+    a1.first_name AS actor1_first_name,
+    a1.last_name AS actor1_last_name,
+    a2.first_name AS actor2_first_name,
+    a2.last_name AS actor2_last_name,
+    COUNT(fa1.film_id) AS shared_films
+FROM 
+    film_actor fa1
+JOIN 
+    film_actor fa2 ON fa1.film_id = fa2.film_id AND fa2.actor_id > fa1.actor_id -- No entiendo esta manera de formular
+JOIN 
+    actor a1 ON fa1.actor_id = a1.actor_id
+JOIN 
+    actor a2 ON fa2.actor_id = a2.actor_id
+GROUP BY 
+    a1.actor_id, a2.actor_id;
+
 -- BUENO pero sin nombres
 SELECT 
 	fa1.actor_id,
@@ -201,6 +219,19 @@ WHERE fa2.actor_id > fa1.actor_id
 AND fa1.film_id = fa2.film_id
 GROUP BY fa1.actor_id, fa2.actor_id;
 
+-- Esquema con nombres pero sin cumplir las condiciones del enunciado
+SELECT 
+	a1.actor_id AS main_id, a1.first_name AS main_name, a1.last_name AS main_surname, 
+	a2.actor_id AS mate_id, a2.first_name AS mate_name, a2.last_name AS mate_surname
+FROM 
+	actor a1, 
+	actor a2
+WHERE a1.actor_id IN (2,3)
+AND a2.actor_id IN (2,3,4,5)
+AND a2.actor_id > a1.actor_id;
+
+
+-- ⚠️ A continuación algunas pruebas:
 
 --  NO FUNCIONA. INTENTO BUENO con nombres
 SELECT 
@@ -214,8 +245,6 @@ JOIN actor a2 ON fa2.actor_id = a2.actor_id
 WHERE fa2.actor_id > fa1.actor_id
 AND fa1.film_id = fa2.film_id
 GROUP BY fa1.actor_id, fa2.actor_id;
-
--- ⚠️ No he llegado a conseguir resolverlo, a continuación algunas pruebas:
 
 SELECT 
 	a1.actor_id AS main_id, a1.first_name AS main_name, a1.last_name AS main_surname, 
