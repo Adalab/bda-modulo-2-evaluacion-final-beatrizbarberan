@@ -189,6 +189,32 @@ consulta debe mostrar el nombre y apellido de los actores y el número de pelíc
 han actuado juntos. Pista: Podemos hacer un JOIN de una tabla consigo misma, poniendole un 
 alias diferente */
 
+-- BUENO pero sin nombres
+SELECT 
+	fa1.actor_id,
+	fa2.actor_id,
+    COUNT(fa1.film_id) AS shared_films
+FROM 
+    film_actor fa1,
+    film_actor fa2
+WHERE fa2.actor_id > fa1.actor_id
+AND fa1.film_id = fa2.film_id
+GROUP BY fa1.actor_id, fa2.actor_id;
+
+
+--  NO FUNCIONA. INTENTO BUENO con nombres
+SELECT 
+	fa1.actor_id, CONCAT(a1.first_name, " ", a1.last_name) main, 
+	fa2.actor_id, CONCAT(a2.first_name, " ", a2.last_name) mate,
+    COUNT(fa1.film_id) AS shared_films
+FROM actor a1
+JOIN film_actor fa1 ON a1.actor_id = fa1.actor_id
+JOIN film_actor fa2 ON fa1.actor_id = fa2.actor_id
+JOIN actor a2 ON fa2.actor_id = a2.actor_id
+WHERE fa2.actor_id > fa1.actor_id
+AND fa1.film_id = fa2.film_id
+GROUP BY fa1.actor_id, fa2.actor_id;
+
 -- ⚠️ No he llegado a conseguir resolverlo, a continuación algunas pruebas:
 
 SELECT 
@@ -205,23 +231,6 @@ AND a2.actor_id IN (SELECT fa2.actor_id FROM film_actor fa2)
 AND a2.actor_id > a1.actor_id
 AND fa1.film_id = fa2.film_id
 GROUP BY a1.actor_id, a2.actor_id;
-
--- ⚠️ Intento simplificar la query para que no pierda la conexión pero no funciona, no consigo comprobar si está bien
-SELECT 
-	a1.actor_id,
-	a2.actor_id,
-    COUNT(fa1.film_id) AS shared_films
-FROM 
-	actor a1, 
-	actor a2,
-    film_actor fa1,
-    film_actor fa2
-WHERE a1.actor_id IN (SELECT fa1.actor_id FROM film_actor fa1)
-AND a2.actor_id IN (SELECT fa2.actor_id FROM film_actor fa2)
-AND a2.actor_id > a1.actor_id
-AND fa1.film_id = fa2.film_id
-GROUP BY a1.actor_id, a2.actor_id
-LIMIT 3;
 
 -- ⚠️ 0 rows returned
 SELECT 
@@ -249,18 +258,36 @@ AND fa1.film_id = fa2.film_id
 GROUP BY a1.actor_id, a2.actor_id, fa1.film_id
 LIMIT 3;
 
+
 SELECT 
 	a1.actor_id,
 	a2.actor_id,
     COUNT(fa1.film_id) AS shared_films
-FROM actor a1, actor a2
-WHERE a1.actor_id = a2.actor_id -- Esto debería ir abajo. Y no puede coincidir
+FROM actor a1
+JOIN actor a2 ON a1.actor_id < a2.actor_id
 JOIN film_actor fa1 ON a2.actor_id = fa1.actor_id
-JOIN film_actor fa2 ON a2.actor_id = fa2.actor_id
-AND a2.actor_id > a1.actor_id -- Y a la vez ser mayor
-AND fa1.film_id = fa2.film_id
-GROUP BY a1.actor_id, a2.actor_id, fa1.film_id
-LIMIT 3;
+JOIN film_actor fa2 ON fa1.actor_id = fa2.actor_id
+GROUP BY a1.actor_id, a2.actor_id;
+
+SELECT 
+	CONCAT(a1.first_name, " ", a1.last_name) main, CONCAT(a2.first_name, " ", a2.last_name) mate,
+    COUNT(fa1.film_id) AS shared_films
+FROM actor a1
+JOIN actor a2 ON a1.actor_id < a2.actor_id
+JOIN film_actor fa1 ON a2.actor_id = fa1.actor_id
+JOIN film_actor fa2 ON fa1.actor_id = fa2.actor_id
+GROUP BY a1.actor_id, a2.actor_id;
+
+SELECT concat(a.first_name," ",a.last_name) AS actor1 ,  concat(a2.first_name," ",a2.last_name) actor2, COUNT(DISTINCT fa1.film_id) AS 'Total films together'
+	FROM actor a
+		INNER JOIN film_actor fa1 ON a.actor_id = fa1.actor_id
+		INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id > fa2.actor_id
+		INNER JOIN actor a2 ON fa2.actor_id = a2.actor_id
+		GROUP BY a.actor_id, a.first_name, a.last_name, a2.actor_id, a2.first_name, a2.last_name
+		HAVING COUNT(DISTINCT fa1.film_id) >= 1;
+
+
+
 
 -- Este esquema inicial con los primeros pasos no da error
 SELECT 
